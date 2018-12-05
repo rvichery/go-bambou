@@ -24,13 +24,13 @@
 package bambou
 
 import (
+	"io"
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -214,6 +214,8 @@ func (s *Session) send(request *http.Request, info *FetchingInfo) (*http.Respons
 	log.Debugf("Request Method URL: %s %s", request.Method, request.URL)
 	log.Debugf("Request Headers: %s", request.Header)
 
+	var RequestBody io.ReadCloser
+
 	response, err := s.client.Do(request)
 
 	if err != nil {
@@ -232,7 +234,10 @@ func (s *Session) send(request *http.Request, info *FetchingInfo) (*http.Respons
 	case http.StatusMultipleChoices:
 		defer response.Body.Close()
 		newURL := request.URL.String() + "?responseChoice=1"
-		request.URL, _ = url.Parse(newURL)
+		if request.Method == "POST" || request.Method == "PUT" && request.GetBody != nil {
+			RequestBody, _ = request.GetBody()
+		}	
+		request, _ = http.NewRequest(request.Method, newURL, RequestBody)
 		return s.send(request, info)
 
 	case http.StatusConflict, http.StatusNotFound:
