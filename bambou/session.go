@@ -214,7 +214,7 @@ func (s *Session) send(request *http.Request, info *FetchingInfo) (*http.Respons
 	log.Debugf("Request Method URL: %s %s", request.Method, request.URL)
 	log.Debugf("Request Headers: %s", request.Header)
 
-	var RequestBody io.ReadCloser
+	var requestBody io.ReadCloser
 
 	response, err := s.client.Do(request)
 
@@ -235,9 +235,9 @@ func (s *Session) send(request *http.Request, info *FetchingInfo) (*http.Respons
 		defer response.Body.Close()
 		newURL := request.URL.String() + "?responseChoice=1"
 		if request.Method == "POST" || request.Method == "PUT" && request.GetBody != nil {
-			RequestBody, _ = request.GetBody()
+			requestBody, _ = request.GetBody()
 		}	
-		request, _ = http.NewRequest(request.Method, newURL, RequestBody)
+		request, _ = http.NewRequest(request.Method, newURL, requestBody)
 		return s.send(request, info)
 
 	case http.StatusConflict, http.StatusNotFound:
